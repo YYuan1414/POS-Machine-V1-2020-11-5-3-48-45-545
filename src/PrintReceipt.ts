@@ -1,3 +1,4 @@
+import { LOADIPHLPAPI } from 'dns'
 import { loadAllItems, loadPromotions } from './Dependencies'
 
 export function printReceipt(tags: string[]): string {
@@ -20,20 +21,29 @@ export function printReceipt(tags: string[]): string {
     let index=0
     let tagIndex=0
     let itemQuantity=0
+    let originalItemQuantity:number
     //判断 row==0
     for (let row=0;row<tags.length;row++){
-      if (tags[row]===tags[index])
+      if (isNaN(+(tags[row].split('-')[1])))
       {
-        itemQuantity++
+        originalItemQuantity=0
       }
       else
       {
-        itemQuantity=1
+        originalItemQuantity=+(tags[row].split('-')[1])
+      }
+      if (tags[row].split('-')[0]===tags[index])
+      {
+        (originalItemQuantity===0)? itemQuantity++: itemQuantity+=originalItemQuantity
+      }
+      else
+      {
+        (originalItemQuantity===0)? itemQuantity=1: itemQuantity=originalItemQuantity
         tagIndex++
         index = row
       }
       tag[tagIndex]={
-        barcode: tags[row],
+        barcode: tags[row].split('-')[0],
         quantity: itemQuantity,
       }
     }
@@ -75,38 +85,26 @@ export function printReceipt(tags: string[]): string {
     return items
   }
 
-  function generateReceipt(items: Item[]): string {
+  function generateReceipt(items: Item[]): string{
     receipt = '***<store earning no money>Receipt ***\n'
-      + generateItemsReceiptWithoutDiscountprice(items)
-      + generateSalePriceReceipt(items)
+    let totalPrice=0
+    let discountedPrice=0
+    for (let itemsNumber=0;itemsNumber<items.length;itemsNumber++)
+    {
+      let itemDiscountedPrice=0
+      if (items[itemsNumber].isSaleItem===true)
+      {
+        itemDiscountedPrice=Math.floor(items[itemsNumber].quantity/3)*items[itemsNumber].price
+        discountedPrice+=Math.floor(items[itemsNumber].quantity/3)*items[itemsNumber].price
+      }
+      receipt+=`Name：${items[itemsNumber].name}，Quantity：${items[itemsNumber].quantity} ${items[itemsNumber].unit}s，Unit：${items[itemsNumber].price.toFixed(2)}(yuan)，Subtotal：${(items[itemsNumber].price * items[itemsNumber].quantity-itemDiscountedPrice).toFixed(2)}(yuan)\n`
+      totalPrice +=(items[itemsNumber].price * items[itemsNumber].quantity)
+    }
+    receipt+='----------------------\n'+`Total：${(totalPrice-discountedPrice).toFixed(2)}(yuan)\nDiscounted prices：${discountedPrice.toFixed(2)}(yuan)\n**********************`
     return receipt
   }
 
-  function generateItemsReceiptWithoutDiscountprice(items: Item[]): string{
-    let partOfReceipt=''
-    let totalPrice=0
-    for (let itemsNumber=0;itemsNumber<items.length;itemsNumber++)
-    {
-      partOfReceipt+=`Name：${items[itemsNumber].name}，Quantity：${items[itemsNumber].quantity} ${items[itemsNumber].unit}s，Unit：${items[itemsNumber].price.toFixed(2)}(yuan)，Subtotal：${(items[itemsNumber].price * items[itemsNumber].quantity).toFixed(2)}(yuan)\n`
-      totalPrice +=(items[itemsNumber].price * items[itemsNumber].quantity)
-    }
-    partOfReceipt+='----------------------\n'+`Total：${(totalPrice).toFixed(2)}(yuan)\n`
-    return partOfReceipt
-  }
 
-  function generateSalePriceReceipt(items: Item[]): string {
-    let salePriceReceipt = ''
-    let discountedPrice=0
-    for (let itemsNumber=0; itemsNumber<items.length;itemsNumber++)
-    {
-      if (items[itemsNumber].isSaleItem===true)
-      {
-        discountedPrice+=Math.floor(items[itemsNumber].quantity/3)*items[itemsNumber].price
-      }
-    }
-    salePriceReceipt=`Discounted prices：${discountedPrice.toFixed(2)}(yuan)\n**********************`
-    return salePriceReceipt
-  }
 
 
 
