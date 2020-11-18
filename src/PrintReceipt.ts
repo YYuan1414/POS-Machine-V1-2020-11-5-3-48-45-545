@@ -2,60 +2,84 @@ import { loadAllItems, loadPromotions } from './Dependencies'
 
 export function printReceipt(tags: string[]): string {
 
-  let items: Item
+  let items: Item[]=[]
   let receipt: string
-  let tag: Tag
+  let tag: Tag[]=[]
   items = getItemsInformation(tags)
   receipt = generateReceipt(items)
   return receipt
 
-  function getItemsInformation(tags: string[]): Item {
+  function getItemsInformation(tags: string[]): Item[] {
     tag = getEachItemQuantity(tags)
-    items = getEachItemInformation(tags, tag)
+    items = getEachItemInformation(tag)
     items = getEachItemSaleInformation(tags)
     return items
   }
 
-  function getEachItemQuantity(tags: string[]): Tag {
-    console.log(tags[0])
-    tag = {
-      barcode: tags[0],
-      quantity: 1,
+  function getEachItemQuantity(tags: string[]): Tag[] {
+    let index=0
+    let tagIndex=0
+    let itemQuantity=0
+    //判断 row==0
+    for (let row=0;row<tags.length;row++){
+      if (tags[row]===tags[index])
+      {
+        itemQuantity++
+      }
+      else
+      {
+        itemQuantity=1
+        tagIndex++
+        index++
+      }
+      tag[tagIndex]={
+        barcode: tags[row],
+        quantity: itemQuantity,
+      }
     }
-    tag.barcode = tags[0]
-    tag.quantity = 1
     return tag
   }
 
-  function getEachItemInformation(tags: string[], tag: Tag): Item {
+
+  function getEachItemInformation(tag: Tag[]): Item[] {
     const allItems = loadAllItems()
-    const item = allItems.filter(item => item.barcode === tags[0])
-    items = {
-      name: item[0].name,
-      price: item[0].price,
-      unit: item[0].unit,
-      quantity: tag.quantity,
-      isSaleItem: false,
+    for (let itemsNumber=0;itemsNumber<tag.length;itemsNumber++){
+      const item = allItems.filter(item => item.barcode === tag[itemsNumber].barcode)
+      items[itemsNumber] = {
+        name: item[0].name,
+        price: item[0].price,
+        unit: item[0].unit,
+        quantity: tag[itemsNumber].quantity,
+        isSaleItem: false,
+      }
     }
     return items
   }
 
 
 
-  function getEachItemSaleInformation(tags: string[]): Item {
+  function getEachItemSaleInformation(tags: string[]): Item[] {
     return items
   }
 
-  function generateReceipt(items: Item): string {
+  function generateReceipt(items: Item[]): string {
     receipt = "***<store earning no money>Receipt ***\n"
-      + `Name：${items.name}，Quantity：${items.quantity} bottles，`
-      + `Unit：${items.price.toFixed(2)}(yuan)，`
-      + `Subtotal：${(items.price * tag.quantity).toFixed(2)}(yuan)\n`
-      + `----------------------\n`
-      + `Total：${(items.price * tag.quantity).toFixed(2)}(yuan)\n`
+      + generateItemsReceiptWithoutDiscountprice(items)
       + `Discounted prices：0(yuan)\n`
       + `**********************`
     return receipt
+  }
+
+  function generateItemsReceiptWithoutDiscountprice(items: Item[]): string{
+    let partOfReceipt=''
+    let totalPrice=0
+    for (let itemsNumber=0;itemsNumber<items.length;itemsNumber++)
+    {
+      partOfReceipt+=`Name：${items[itemsNumber].name}，Quantity：${items[itemsNumber].quantity} ${items[itemsNumber].unit}s，Unit：${items[itemsNumber].price.toFixed(2)}(yuan)，Subtotal：${(items[itemsNumber].price * items[itemsNumber].quantity).toFixed(2)}(yuan)\n`
+      totalPrice +=(items[itemsNumber].price * items[itemsNumber].quantity)
+    }
+    partOfReceipt+=`----------------------\n`+`Total：${(totalPrice).toFixed(2)}(yuan)\n`
+    return partOfReceipt
   }
 
 
