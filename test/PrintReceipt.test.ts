@@ -1,7 +1,7 @@
-import {printReceipt} from '../src/PrintReceipt'
+import { printReceipt } from '../src/PrintReceipt'
 
 describe('printReceipt', () => {
-  it('should print receipt with promotion when print receipt', () => {
+  /* it('should print receipt with promotion when print receipt', () => {
     const tags = [
       'ITEM000001',
       'ITEM000001',
@@ -20,8 +20,21 @@ Name：Instant Noodles，Quantity：3 bags，Unit：4.50(yuan)，Subtotal：9.00
 ----------------------
 Total：58.50(yuan)
 Discounted prices：7.50(yuan)
+**********************` */
+
+  it('should print receipt with promotion when print receipt', () => {
+    const tags = [
+      'ITEM000001'
+    ]
+
+    const expectText = `***<store earning no money>Receipt ***
+Name：Sprite，Quantity：1 bottles，Unit：3.00(yuan)，Subtotal：3.00(yuan)
+----------------------
+Total：3.00(yuan)
+Discounted prices：0(yuan)
 **********************`
 
     expect(printReceipt(tags)).toEqual(expectText)
   })
+
 })
